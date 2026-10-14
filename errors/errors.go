@@ -82,6 +82,31 @@ var (
 	ErrSameBuckets = errors.New("the source and target are the same bucket")
 
 	// ErrDifferentDB is returned when trying to move a sub-bucket between
-	// source and target buckets, while source and target buckets are in different database files.
+	// source and target buckets, while source and target buckets are in different
+	// database files.
 	ErrDifferentDB = errors.New("the source and target buckets are in different database files")
+)
+
+// These errors can occur while migrating keys between buckets with
+// (*DB).MigrateKeys or (*DB).RecoverKeyMigrations.
+var (
+	// ErrMigrationKeyMissing is returned when a key listed in the ownership
+	// table cannot be found in any bucket and no staged copy is held in the
+	// migration manifest. The value is unrecoverable and must be restored
+	// out of band before the batch can proceed.
+	ErrMigrationKeyMissing = errors.New("migration: key listed in the ownership table is missing from every bucket")
+
+	// ErrMigrationConflict is returned when the live copies of a key found in
+	// different buckets hold different values. The migration never guesses
+	// which copy is authoritative; the conflict must be resolved out of band.
+	ErrMigrationConflict = errors.New("migration: conflicting values found for the same key in different buckets")
+
+	// ErrMigrationBatchExists is returned when a batch ID is reused with a
+	// different set of bindings than the batch that was already recorded under
+	// that ID. Re-submitting an identical batch is an idempotent no-op.
+	ErrMigrationBatchExists = errors.New("migration: batch ID already exists with different bindings")
+
+	// ErrMigrationReservedBucket is returned when the ownership table refers to
+	// a bucket name that is reserved for the migration manifest.
+	ErrMigrationReservedBucket = errors.New("migration: bucket name is reserved for the migration manifest")
 )
