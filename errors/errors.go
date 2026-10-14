@@ -85,3 +85,27 @@ var (
 	// source and target buckets, while source and target buckets are in different database files.
 	ErrDifferentDB = errors.New("the source and target buckets are in different database files")
 )
+
+// These errors can occur during a resumable compaction (see CompactResumable).
+var (
+	// ErrCompactSourceChanged is returned when resuming an interrupted
+	// compaction and the source database no longer matches the snapshot
+	// fingerprint recorded in the checkpoint: it has been modified since the
+	// interrupted run. The partial output is discarded because mixing data
+	// from different source snapshots would not produce an identical copy.
+	ErrCompactSourceChanged = errors.New("compaction aborted: the source database has changed since the checkpoint was written")
+
+	// ErrCompactCheckpointCorrupt is returned when a compaction checkpoint
+	// file cannot be parsed or has an unsupported version.
+	ErrCompactCheckpointCorrupt = errors.New("compaction checkpoint is invalid or corrupt")
+
+	// ErrCompactPartialExists is returned when a partial compaction output is
+	// found without a matching checkpoint, or a stale temporary file blocks a
+	// fresh compaction run.
+	ErrCompactPartialExists = errors.New("a partial compaction output exists without a valid checkpoint")
+
+	// ErrCompactOutputExists is returned when the destination path of a
+	// compaction already exists. CompactResumable never overwrites an existing
+	// destination file.
+	ErrCompactOutputExists = errors.New("compaction destination already exists")
+)
