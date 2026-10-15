@@ -28,6 +28,7 @@ func newSurgeryMetaCommand() *cobra.Command {
 
 	cmd.AddCommand(newSurgeryMetaValidateCommand())
 	cmd.AddCommand(newSurgeryMetaUpdateCommand())
+	cmd.AddCommand(newSurgeryMetaRecoverCommand())
 
 	return cmd
 }

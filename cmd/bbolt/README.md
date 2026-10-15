@@ -775,6 +775,7 @@ Usage:
   bbolt surgery meta [command]
 
 Available Commands:
+  recover     deterministically recover diverged meta pages after a crash, recording the decision in a journal
   update      update meta page
   validate    validate meta page
 
@@ -843,3 +844,40 @@ Example:
   ```
 
   - It updates the specified meta page and automatically updates magic number, version, flags, and checksum to ensure consistency.
+
+##### surgery meta recover
+
+`surgery meta recover` recovers diverged or torn meta pages after a power loss. It inspects both meta pages read-only, deterministically chooses a version (the only valid page, or the valid page with the higher txid), writes a repaired copy to `--output`, and records the full decision trail — per-page validation evidence, selected page, reason, rollback events and pre/post fingerprints — in a JSON decision journal. The source database is never modified, and both original meta pages are backed up before the repair.
+
+The command stops without writing anything when:
+- both meta pages fail validation; or
+- both meta pages are valid with the same txid but different contents, unless an explicit `--select-meta-page` is given.
+
+Re-running it after an interruption reconciles the output against the journal and always converges to the same recorded conclusion.
+
+Usage:
+```
+$ bbolt surgery meta recover -h
+Deterministically recover diverged meta pages after a crash, recording the decision in a journal
+
+Usage:
+  bbolt surgery meta recover <bbolt-file> [flags]
+
+Flags:
+  -h, --help                 help for recover
+      --journal string       path of the JSON decision journal (defaults to <output>.meta-recovery.json)
+      --output string        path to the recovered db file
+      --select-meta-page int explicitly choose meta page 0 or 1; only allowed when both pages are valid with the same txid but different contents (default -1)
+```
+
+Example:
+
+  ```bash
+  $ bbolt surgery meta recover ~/default.etcd/member/snap/db --output recovered.db
+  Selected meta page 1 (txid 42), reason: higher-txid
+  Action: copied meta page 1 over page 0 in the output copy
+  Original meta page backup: recovered.db.meta-page-0.1a2b3c4d.bak
+  Original meta page backup: recovered.db.meta-page-1.9f8e7d6c.bak
+  Recovered database: recovered.db
+  Decision journal: recovered.db.meta-recovery.json
+  ```
